@@ -1,28 +1,74 @@
-
 #include <iostream>
 #include "funcionesvideojuego_v1.h"
+#include "assets.h"
+
 // TODO: Iniciar la programcion incial del videojuego
 
+void Nivel01() {
+	Dibujar_Mapa01(mapa01, 50, 80);
+}
+
 int main() {
-	int mapa01[] = {//Este es solo un ejemplo, falta implementar el mapa01
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-	};
-	int presentacion[] = {
-		1,0,0,0,1,
-		1,0,0,0,1,
-	};
 
-	int jugador[]{
-		-1,-1,-1,-1,4,4,-1,-1,-1,-1,
-		-1,-1,-1,4,4,4,4,-1,-1,-1,
-		-1,4,4,4,4,4,4,4,4,-1
-	};
+	configurarConsola();
 
-	//Dibujar_Mapa(mapa01, 5, 8);
+	
+	Dibujar_Presentacion(presentacion_matris, 50, 80);//Llamar a la funcion dibujar presentacion
+	bool opcion_elegida = false;
+	int num_opcion;
+	inicio:
+	do
+	{
+		if (_kbhit()) {
+			Dibujar_Presentacion(presentacion_matris, 50, 80);
+
+			char o = _getch();
+			if (o == 13) {
+				opcion_elegida = true;
+				num_opcion = position_flecha / 5;
+			}
+		}
+	} while (!opcion_elegida);
+
+	if (num_opcion == 0) {
+		system("cls");//Limpiamos pantalla
+		
+		Nivel01();
+
+	}
+
+	if (num_opcion == 1) {
+		system("cls");//Limpiamos pantalla
+		//dibujarinstrucciones();
+		mostrarinstrucciones();
+
+		do
+		{
+			if (_kbhit()) {
+				opcion_elegida = false;
+				num_opcion = -1;
+				system("cls");
+				goto inicio;
+			}
+		} while (true);
+
+	}
+
+	if (num_opcion == 2) {
+		system("cls");//Limpiamos pantalla
+		creditos();
+
+		do {
+	        if(_kbhit()){
+				opcion_elegida = false;
+				num_opcion=-1;
+				system("cls");
+				goto inicio;
+			}
+		
+		} while (true);
+	}
+
 	/*while (true)
 	{
 
@@ -31,15 +77,9 @@ int main() {
 	bool se_movio = Leer_movimiento();
 	if (se_movio) {
 	std::cout << " ";
-	Dibujar_Mapa(mapa01, 5, 8);
+	Dibujar_Mapa01(mapa01, 5, 8);
 	}*/
 
-	//Dibujar_jugador(jugador, 3, 10);
-	dibujarinstrucciones(presentacion, 2, 5);
-	mostrarinstrucciones();
-	//mostrarinstrucciones();
-	
-	//Presentacion(presentacion, 2, 5);
 	system("pause");
 	return 0;
 }

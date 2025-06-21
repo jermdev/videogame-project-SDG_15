@@ -1,7 +1,9 @@
 #ifndef FUNCIONESVIDEOJUEGO_V1
 #define FUNCIONESVIDEOJUEGO_V1
+
 #include "conio.h"
 #include <iostream>
+#include <windows.h>
 
 #define ARRIBA 72
 #define ABAJO 80
@@ -17,16 +19,10 @@ struct Poder {
 };
 
 // matrices de los mapas
-int mapa01[] = {//Este es solo un ejemplo, falta implementar el mapa01
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-		2,2,2,2,2,2,2,2,
-};
+
 
 bool mapa_inicializado = false;
-// dimenciones del jugador
+// dimensiones del jugador
 int filas_jugador = 10;
 int columnas_jugador = 15;
 
@@ -44,9 +40,27 @@ int nivel_juego = 1;
 //arreglo de los poderes
 Poder arr_poderes[] = { {"romper tronco", false}, {"devolver tronco", false}};
 
-//int Nivel_de_juego() {
-//
+
+void gotoxi(int x, int y) {
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+//void maximizarConsola() {
+//	HWND consola = GetConsoleWindow();
+//	ShowWindow(consola, SW_MAXIMIZE); // Maximiza la ventana
 //}
+
+
+void configurarConsola() {
+	int maxAncho = Console::LargestWindowWidth;
+	int maxAlto = Console::LargestWindowHeight;
+	Console::WriteLine("Máximo permitido: {0}x{1}", maxAncho, maxAlto);
+	Console::SetBufferSize(500, 500);  // columnas, filas
+	Console::SetWindowSize(500, 500);  // columnas, filas
+}
 
 
 
@@ -63,13 +77,21 @@ los colores se dibujan en funcion del valor entero en el arreglo.
 (color del interior del trnco) 4: marron terracota calido -> #A9745B -> en ANSI \033[48;5;137m \033[0m
 (color de las letras del titulo) 5: gris azulado muy oscuro -> \033[48;5;235m \033[0m
 */
-void Dibujar_Presentacion(int* matriz, int filas, int columnas) {
+int position_flecha = 0;
+
+
+
+void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_iniciales = 0, int coords_y_iniciales = 0) {
+
+	int coord_escribir_X = 40;
+	int coord_escribir_Y = 20;
+
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			Console::SetCursorPosition(j, i);//Establecemos sus cordenadas segun su pocision 
+			Console::SetCursorPosition(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus cordenadas segun su posicion 
 
-			switch (matriz[i * columnas + j]) {
+			switch (matriz[(coords_y_iniciales + (i * columnas)) + (j + coords_x_iniciales)]) {
 			case 0: cout << "\033[48;5;70m \033[0m"; break;
 			case 1: cout << "\033[48;5;102m \033[0m"; break;
 			case 2: cout << "\033[48;5;58m \033[0m"; break;
@@ -78,7 +100,34 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas) {
 			case 5: cout << "\033[48;5;235m \033[0m"; break;
 			}
 		}
+	
 	}
+
+	//if (!incializado) _sleep(2000);
+	Console::SetCursorPosition(coord_escribir_X, coord_escribir_Y);
+	cout << "JUGAR";
+
+	Console::SetCursorPosition(coord_escribir_X, coord_escribir_Y+5);
+	cout << "Instrucciones";
+
+	Console::SetCursorPosition(coord_escribir_X, coord_escribir_Y+10);
+	cout << "Creditos";
+
+	char t = _getch();
+
+	if (t == ARRIBA) {
+		position_flecha -= 5;
+	}
+	else if (t == ABAJO) {
+		position_flecha += 5;
+	}
+
+	if (position_flecha > 10 || position_flecha < 0) {
+		position_flecha = 0;
+	}
+	Console::SetCursorPosition(coord_escribir_X - 6, coord_escribir_Y + position_flecha);
+	cout << "-->";
+	
 }
 
 /*
@@ -89,7 +138,7 @@ los colores se dibujan en funcion de un valor entero en el arreglo.
 (color del camino) 2: arena claro -> #d2b48c -> lo más parecido en ANSI \033[48;5;180m \033[0m
 */
 
-void Dibujar_Mapa(int* matriz, int filas, int columnas, int coords_x_iniciales = 0, int coords_y_iniciales = 0) {// argumentos, un arreglo por referencia, numero filas, numero de colunas, obsional coords inciales
+void Dibujar_Mapa01(int* matriz, int filas, int columnas, int coords_x_iniciales = 0, int coords_y_iniciales = 0) {// argumentos, un arreglo por referencia, numero filas, numero de colunas, obsional coords inciales
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
 			Console::SetCursorPosition(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus cordenadas segun su pocision 
@@ -100,10 +149,27 @@ void Dibujar_Mapa(int* matriz, int filas, int columnas, int coords_x_iniciales =
 			case 2: cout << "\033[48;5;180m \033[0m"; break;
 			}
 		}
-		if (!mapa_inicializado) {
-		mapa_inicializado = true;
-		_sleep(200);
+		
+		_sleep(100);
+		
+	}
+}
+void Dibujar_mapa2(int* matriz, int filas, int columnas) {
+	Console::CursorVisible = false;
+	for (int i = 0; i < filas; i++) {
+		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
+			Console::SetCursorPosition(j, i);//Establecemos sus cordenadas segun su pocision 
+
+			switch (matriz[i * columnas + j]) {
+			case 0: cout << "\033[48;5;52m \033[0m"; break;
+			case 1: cout << "\033[48;5;22m \033[0m"; break;
+			case 2: cout << "\033[48;5;196m \033[0m"; break;
+			case 3: cout << "\033[48;5;226m \033[0m"; break;
+			case 4: cout << "\033[48;5;94m \033[0m"; break;
+			case 5: cout << "\033[48;5;186m \033[0m"; break;
+			}
 		}
+		_sleep(100);
 	}
 }
 /*
@@ -302,25 +368,25 @@ bool Leer_movimiento(int* mapa) {
 		char t = _getch();
 		if (t == ARRIBA) {
 
-			Dibujar_Mapa(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);//Esta linea se encarga de rellenar las pociciones anteriores del jugador con el mapa
+			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);//Esta linea se encarga de rellenar las pociciones anteriores del jugador con el mapa
 
 			coord_y_jugador--;
 			return true;
 		}
 		if (t == ABAJO) {
-			Dibujar_Mapa(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
+			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
 
 			coord_y_jugador++;
 			return true;
 		}
 		if (t == DERECHA) {
-			Dibujar_Mapa(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
+			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
 
 			coord_x_jugador++;
 			return true;
 		}
 		if (t == IZQUIERDA) {
-			Dibujar_Mapa(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
+			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
 
 			coord_x_jugador--;
 			return true;
@@ -332,13 +398,32 @@ bool Leer_movimiento(int* mapa) {
 
 
 
-void Avilitar_desavilitar_poderes(string poder, bool accion) {
-	for (int i = 0; i < sizeof(arr_poderes); i++) {
+void cambiarPoder(string poder, bool activar) {
+	int total = sizeof(arr_poderes) / sizeof(arr_poderes[0]);
+	for (int i = 0; i < total; i++) {
 		if (arr_poderes[i].nombre == poder) {
-			arr_poderes[i].avilitado = accion;
+			arr_poderes[i].avilitado = activar;
 		}
 	}
 }
+void creditos() {
+	Console::SetCursorPosition(30, 2);
+	cout << "CREDITOS";
+	Console::SetCursorPosition(2, 4);
+	cout << "AUTORES/PROGRAMADORES/DISEÑADORES";
+	Console::SetCursorPosition(2, 6);
+	cout << "- Jeremi Porras";
+	Console::SetCursorPosition(2, 8);
+	cout << "- Alessio Ccasani";
+	Console::SetCursorPosition(2, 10);
+	cout << "- Emerson Nolasco";
+	Console::SetCursorPosition(2, 13);
+	cout << "UNIDOS POR EL CAMBIO";
+	Console::SetCursorPosition(2, 16);
+	cout << "La tala de árboles destruye hogares naturales, altera el clima y pone en riesgo nuestro futuro ";
+	
+}
+
 
 
 bool Hay_colision(int obj01_x, int obj01_y,int heith_barra_de_colicion , int obj02_x, int obj02_y) {
@@ -372,6 +457,8 @@ void vidas(int colision, int matriz[], int filas, int columnas) {
 		dibujarperdiste(matriz, filas, columnas);
 		mostrarperdiste();
 	}
+
 }
+
 
 #endif
