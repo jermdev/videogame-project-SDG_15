@@ -13,22 +13,22 @@
 using namespace std;
 using namespace System;
 
-struct Poder {
-	string nombre;
-	bool avilitado;
-};
 
-// matrices de los mapas
+// variables iniciales
+
+//dimenciones tronco
+int dimensiones_tronco_filas = 12, dimensiones_tronco_columnas = 4;
+
+// cordenadas iniciales del jugador
+const int coord_x_jugador = 20;
+const int coord_y_jugador = 25;
 
 
 bool mapa_inicializado = false;
 // dimensiones del jugador
-int filas_jugador = 10;
-int columnas_jugador = 15;
+int filas_jugador = 19;
+int columnas_jugador = 10;
 
-// cordenadas iniciales del jugador
-int coord_x_jugador = 20;
-int coord_y_jugador = 25;
 
 //cordenadas iniciales de la maquina
 int coord_x_maquina = 20;
@@ -36,6 +36,40 @@ int corrd_y_maquina = 25;
 
 // Nivel del juego
 int nivel_juego = 1;
+
+// dimensiones de los mapas
+int filas_mapa01 = 50, columnas_mapa01 = 80;
+int filas_mapa02 = 73, columnas_mapa02 = 100;
+
+// estructuras
+struct Poder {
+	string nombre;
+	bool avilitado;
+};
+
+struct Cordenadas {
+	int X;
+	int Y;
+};
+
+struct Tronco {
+	int tiempo_de_aparicion;
+	bool activo;
+	Cordenadas cordenadas;
+};
+
+
+struct Jugador {
+	int vidas = 3;
+	Cordenadas cordenadas = { coord_x_jugador, coord_y_jugador };
+};
+
+const int MAX_TRONCOS = 3;
+Tronco troncos[MAX_TRONCOS];
+
+Jugador jugador;
+
+
 
 //arreglo de los poderes
 Poder arr_poderes[] = { {"romper tronco", false}, {"devolver tronco", false}};
@@ -58,8 +92,8 @@ void configurarConsola() {
 	int maxAncho = Console::LargestWindowWidth;
 	int maxAlto = Console::LargestWindowHeight;
 	Console::WriteLine("Máximo permitido: {0}x{1}", maxAncho, maxAlto);
-	Console::SetBufferSize(500, 500);  // columnas, filas
-	Console::SetWindowSize(500, 500);  // columnas, filas
+	Console::SetBufferSize(800, 800);  // columnas, filas
+	Console::SetWindowSize(800, 800);  // columnas, filas
 }
 
 
@@ -89,7 +123,7 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			Console::SetCursorPosition(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus cordenadas segun su posicion 
+			gotoxi(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus cordenadas segun su posicion 
 
 			switch (matriz[(coords_y_iniciales + (i * columnas)) + (j + coords_x_iniciales)]) {
 			case 0: cout << "\033[48;5;70m \033[0m"; break;
@@ -104,13 +138,13 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 	}
 
 	//if (!incializado) _sleep(2000);
-	Console::SetCursorPosition(coord_escribir_X, coord_escribir_Y);
+	gotoxi(coord_escribir_X, coord_escribir_Y);
 	cout << "JUGAR";
 
-	Console::SetCursorPosition(coord_escribir_X, coord_escribir_Y+5);
+	gotoxi(coord_escribir_X, coord_escribir_Y+5);
 	cout << "Instrucciones";
 
-	Console::SetCursorPosition(coord_escribir_X, coord_escribir_Y+10);
+	gotoxi(coord_escribir_X, coord_escribir_Y+10);
 	cout << "Creditos";
 
 	char t = _getch();
@@ -125,7 +159,7 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 	if (position_flecha > 10 || position_flecha < 0) {
 		position_flecha = 0;
 	}
-	Console::SetCursorPosition(coord_escribir_X - 6, coord_escribir_Y + position_flecha);
+	gotoxi(coord_escribir_X - 6, coord_escribir_Y + position_flecha);
 	cout << "-->";
 	
 }
@@ -138,19 +172,17 @@ los colores se dibujan en funcion de un valor entero en el arreglo.
 (color del camino) 2: arena claro -> #d2b48c -> lo más parecido en ANSI \033[48;5;180m \033[0m
 */
 
-void Dibujar_Mapa01(int* matriz, int filas, int columnas, int coords_x_iniciales = 0, int coords_y_iniciales = 0) {// argumentos, un arreglo por referencia, numero filas, numero de colunas, obsional coords inciales
+void Dibujar_Mapa01(int* matriz, int filas, int columnas) {// argumentos, un arreglo por referencia, numero filas, numero de colunas, obsional coords inciales
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			Console::SetCursorPosition(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus cordenadas segun su pocision 
+			gotoxi(j , i );//Establecemos sus cordenadas segun su pocision 
 
-			switch (matriz[(coords_y_iniciales + (i * columnas)) + (j + coords_x_iniciales)]) {
+			switch ( matriz[ (i * columnas)  + j] ) {
 			case 0: cout << "\033[48;5;52m \033[0m"; break;
 			case 1: cout << "\033[48;5;34m \033[0m"; break;
 			case 2: cout << "\033[48;5;180m \033[0m"; break;
 			}
 		}
-		
-		_sleep(100);
 		
 	}
 }
@@ -158,7 +190,7 @@ void Dibujar_mapa2(int* matriz, int filas, int columnas) {
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			Console::SetCursorPosition(j, i);//Establecemos sus cordenadas segun su pocision 
+			gotoxi(j, i);//Establecemos sus cordenadas segun su pocision 
 
 			switch (matriz[i * columnas + j]) {
 			case 0: cout << "\033[48;5;52m \033[0m"; break;
@@ -183,7 +215,7 @@ Los colores se dibujaran en funcion de un valor entero en arreglo.
 void Dibujar_jugador(int* matriz, int filas, int columnas) {
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			Console::SetCursorPosition(j + coord_x_jugador, i + coord_y_jugador);//Establecemos sus cordenadas segun su pocision 
+			gotoxi(j + jugador.cordenadas.X, i + jugador.cordenadas.Y);//Establecemos sus cordenadas segun su pocision 
 
 			switch (matriz[i * columnas + j]) {
 			case -1: break;
@@ -204,7 +236,7 @@ Colores para dibujar el tronco
 void DibujarTronco(int* matriz, int filas, int columnas, int coord_x_tronco, int coord_y_tronco) {
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {
-			Console::SetCursorPosition(j + coord_x_tronco, i + coord_y_tronco);
+			gotoxi(j + coord_x_tronco, i + coord_y_tronco);
 			switch (matriz[i * columnas + j]) {
 			case 6: cout << "\033[48;5;16m \033[0m"; break;
 			case 7: cout << "\033[48;5;99m \033[0m"; break;
@@ -212,6 +244,7 @@ void DibujarTronco(int* matriz, int filas, int columnas, int coord_x_tronco, int
 		}
 	}
 }
+
 
 /*
 Colores para dibujar la maquina
@@ -227,7 +260,7 @@ Colores para dibujar la maquina
 void Dibujar_maquina(int* matriz, int filas, int columnas) {
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {
-			Console::SetCursorPosition(j + coord_x_maquina, i + corrd_y_maquina);
+			gotoxi(j + coord_x_maquina, i + corrd_y_maquina);
 			switch (matriz[i* columnas + j]) {
 			case -1: break;
 			case 6: cout << "\033[48;5;16m \033[0m"; break;
@@ -253,7 +286,7 @@ Colores para dibujar el arbol
 void DibujarArbol(int* matriz, int filas, int columnas, int coord_x_arbol, int coord_y_arbol) {
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {
-			Console::SetCursorPosition(j + coord_x_arbol, i + coord_y_arbol);
+			gotoxi(j + coord_x_arbol, i + coord_y_arbol);
 			switch (matriz[i * columnas + j]) {
 			case -1:break;
 			case 7: std::cout << "\033[48;5;94m \033[0m"; break; // Marrón (tronco)
@@ -262,13 +295,38 @@ void DibujarArbol(int* matriz, int filas, int columnas, int coord_x_arbol, int c
 		}
 	}
 }
+// Colores para dibujar castor
+// espacios en blanco = -1
+// #000000 -> bordes en negro del castor = 6
+// #c7961c -> color del pelaje del castor = 13
+// #c7961c -> color de las ojeras del castor = 14
+// #714646 -> color de la nariz del castor = 15
+// #714646 -> color marron del castor = 0
+// #ffffff -> color de dientes del castor (blanco) = 4
 
+void DibujarCastor(int* matriz, int filas, int columnas, int coord_x_castor, int coord_y_castor) {
+	Console::CursorVisible = false;
+	for (int i = 0; i < filas; i++) {
+		for (int j = 0; j < columnas; j++) {
+			gotoxi(j + coord_x_castor, i + coord_y_castor);
+			switch (matriz[i * columnas + j]) {
+			case -1: break;
+			case 0: cout << "\033[48;5;52m \033[0m"; break;
+			case 4: cout << "\033[48;5;231m \033[0m"; break;
+			case 6: cout << "\033[48;5;16m \033[0m"; break;
+			case 13: cout << "\033[48;5;136m \033[0m"; break;
+			case 14: cout << "\033[48;5;136m \033[0m"; break; 
+			case 15: cout << "\033[48;5;95m \033[0m"; break;
+			}
+		}
+	}
+}
 
 void dibujarperdiste(int* matriz, int filas, int columnas) {
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {
-			Console::SetCursorPosition(j, i);
+			gotoxi(j, i);
 			switch (matriz[i * columnas + j]) {
 			case 0: cout << "\033[48;5;88m \033[0m"; break;   // borde rojo oscuro
 			case 1: cout << "\033[48;5;196m \033[0m"; break;  // fondo rojo brillante
@@ -279,11 +337,11 @@ void dibujarperdiste(int* matriz, int filas, int columnas) {
 
 // mostrar el mensaje game over
 void mostrarperdiste() {
-	Console::SetCursorPosition(30, 2);
+	gotoxi(30, 2);
 	cout << "UPS! LO SENTIMOS";
-	Console::SetCursorPosition(30, 4);
+	gotoxi(30, 4);
 	cout << "HAS PERDIDO";
-	Console::SetCursorPosition(30, 6);
+	gotoxi(30, 6);
 	cout << "INTENTALO DENUEVO";
 }
 
@@ -292,7 +350,7 @@ void dibujarganaste(int* matriz, int filas, int columnas) {
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {
-			Console::SetCursorPosition(j, i);
+			gotoxi(j, i);
 			switch (matriz[i * columnas + j]) {
 			case 0: cout << "\033[48;5;22m \033[0m"; break;   // borde verde oscuro
 			case 1: cout << "\033[48;5;120m \033[0m"; break;  // fondo verde claro
@@ -313,84 +371,157 @@ void mostrarganaste() {
 
 // mostrar instrucciones 
 void mostrarinstrucciones() {
-	Console::SetCursorPosition(30, 2);
+	gotoxi(30, 2);
 	cout << "INSTRUCCIONES";
-	Console::SetCursorPosition(2, 4);
+	gotoxi(2, 4);
 	cout << "1. Los controles para moverse son: W A S D";
-	Console::SetCursorPosition(2, 6);
+	gotoxi(2, 6);
 	cout << "2. El jugador comenzara con 3 vidas.";
-	Console::SetCursorPosition(2, 8);
+	gotoxi(2, 8);
 	cout << "3. Los poderes disponibles son: Destruir troncos, Revertir trayectoria.";
-	Console::SetCursorPosition(2, 10);
+	gotoxi(2, 10);
 	cout << "4. Por cada 3 troncos destruidos hay una posibilidad que aparesca un castor";
-	Console::SetCursorPosition(5, 11);
+	gotoxi(5, 11);
 	cout << "y te entrege una vida extra.";
-	Console::SetCursorPosition(2, 13);
+	gotoxi(2, 13);
 	cout << "5. El jugador tiene que esquivar los troncos, y por cada uno que le choque";
-	Console::SetCursorPosition(5, 14);
+	gotoxi(5, 14);
 	cout << "perdera una vida. ";
-	Console::SetCursorPosition(2, 16);
+	gotoxi(2, 16);
 	cout << "6. En el primeri nivel el jugador tendra que esquivar troncos, y por cada 5 ";
-	Console::SetCursorPosition(5, 17);
+	gotoxi(5, 17);
 	cout << "troncos que esquive podra lanzar un poder para destruir los troncos.";
-	Console::SetCursorPosition(2, 19);
+	gotoxi(2, 19);
 	cout << "7. Cuando se destruye un tronco se planta un arbol automaticamente.";
-	Console::SetCursorPosition(2, 21);
+	gotoxi(2, 21);
 	cout << "8. Los niveles se pasan plantando 5 arboles.";
-	Console::SetCursorPosition(2, 23);
+	gotoxi(2, 23);
 	cout << "9. En el segundo nivel el jugador tendra otro poder que le permitira revertir";
-	Console::SetCursorPosition(5, 24);
+	gotoxi(5, 24);
 	cout << "la direccion de los troncos para poder destruir la maquina enemiga. ";
-	Console::SetCursorPosition(2, 26);
+	gotoxi(2, 26);
 	cout << "10. La maquina enemiga tiene 5 vidas por cada tronco que le choca pierde una.";
-	Console::SetCursorPosition(2, 28);
+	gotoxi(2, 28);
 	cout << "11. En el segundo nivel por cada 5 troncos que esquive el jugador este";
-	Console::SetCursorPosition(6, 29);
+	gotoxi(6, 29);
 	cout << "obtendra un poder el cual revierte la direccion de los troncos";
 }
 
 // dibujar instrucciones
-void dibujarinstrucciones(int* matriz, int filas, int columnas) {
-	for (int i = 0; i < filas; i++) {
-		for (int j = 0; j < columnas; j++) {
+void dibujarfondoinstrucciones() {
+	Console::SetWindowSize(80, 50);
+	Console::SetBufferSize(80, 50);
+	const int FILAS = 50;
+	const int COLUMNAS = 80;
+	int matrizfondo[FILAS * COLUMNAS];
+	for (int i = 0; i < FILAS; i++) {
+		for (int j = 0; j < COLUMNAS; j++) {
+			if (i == 0 || i == 49 || j == 0 || j == 79)
+			{
+				matrizfondo[i * COLUMNAS + j] = 0;
+			} //borde
+			else
+			{
+				matrizfondo[i * COLUMNAS + j] = 1;
+			} //fondo
+		}
+	}
+	Console::CursorVisible = false;
+	for (int i = 0; i < FILAS; i++) {
+		for (int j = 0; j < COLUMNAS; j++) {
 			Console::SetCursorPosition(j, i);
-			switch (matriz[i * columnas + j]) {
+			switch (matrizfondo[i * COLUMNAS + j]) {
 			case 0: cout << "\033[48;5;52m \033[0m"; break;
-			case 1: cout << "\033[48;5;17m \033[0m"; break;
+			case 1: cout << "\033[48;5;34m \033[0m"; break;
+			}
+		}
+	}
+}
+void creditos() {
+	gotoxi(30, 2);
+	cout << "CREDITOS";
+	gotoxi(2, 4);
+	cout << "AUTORES/PROGRAMADORES/DISEÑADORES";
+	gotoxi(2, 6);
+	cout << "- Jeremi Porras";
+	gotoxi(2, 8);
+	cout << "- Alessio Ccasani";
+	gotoxi(2, 10);
+	cout << "- Emerson Nolasco";
+	gotoxi(2, 13);
+	cout << "UNIDOS POR EL CAMBIO";
+	gotoxi(2, 16);
+	cout << "La tala de árboles destruye hogares naturales,";
+	gotoxi(5, 17);
+	cout << "altera el clima y pone en riesgo nuestro futuro.";
+
+}
+
+void dibujarfondocreditos() {
+	Console::SetWindowSize(80, 50);
+	Console::SetBufferSize(80, 50);
+	const int FILAS = 50;
+	const int COLUMNAS = 80;
+	int matrizfondo[FILAS * COLUMNAS];
+	for (int i = 0; i < FILAS; i++) {
+		for (int j = 0; j < COLUMNAS; j++) {
+			if (i == 0 || i == 49 || j == 0 || j == 79)
+			{
+				matrizfondo[i * COLUMNAS + j] = 0;
+			} //borde
+			else
+			{
+				matrizfondo[i * COLUMNAS + j] = 1;
+			} //fondo
+		}
+	}
+	Console::CursorVisible = false;
+	for (int i = 0; i < FILAS; i++) {
+		for (int j = 0; j < COLUMNAS; j++) {
+			Console::SetCursorPosition(j, i);
+			switch (matrizfondo[i * COLUMNAS + j]) {
+			case 0: cout << "\033[48;5;94m \033[0m"; break;
+			case 1: cout << "\033[48;5;58m \033[0m"; break;
+			}
+		}
+	}
+}
+// Movimientos 
+void Limpiar_objeto(int* mapa, int filas, int columnas, int x, int y, int filas_jugador, int columnas_jugador) {
+	for (int i = 0; i < filas_jugador; i++) {
+		for (int j = 0; j < columnas_jugador; j++) {
+			gotoxi(x + j, y + i);
+			int valor_fondo = mapa[(y + i) * columnas + (x + j)];
+			switch (valor_fondo) {
+			case 0: cout << "\033[48;5;52m \033[0m"; break;
+			case 1: cout << "\033[48;5;34m \033[0m"; break;
+			case 2: cout << "\033[48;5;180m \033[0m"; break;
+				
 			}
 		}
 	}
 }
 
-// Movimientos 
+
 bool Leer_movimiento(int* mapa) {
 	if (_kbhit()) {
+
+
 		char t = _getch();
-		if (t == ARRIBA) {
 
-			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);//Esta linea se encarga de rellenar las pociciones anteriores del jugador con el mapa
+		//RestaurarFondoDebajoJugador(filas_jugador, columnas_jugador);
+		Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01,jugador.cordenadas.X, jugador.cordenadas.Y, filas_jugador, columnas_jugador);
 
-			coord_y_jugador--;
-			return true;
+		switch (t) {
+		case ARRIBA: (jugador.cordenadas.Y > 0) ? jugador.cordenadas.Y-- : jugador.cordenadas.Y++; break;
+		case ABAJO: (jugador.cordenadas.Y + filas_jugador < filas_mapa01) ? jugador.cordenadas.Y++ : jugador.cordenadas.Y--; break;
+		case DERECHA: (jugador.cordenadas.X + columnas_jugador < columnas_mapa01 ) ? jugador.cordenadas.X++ : jugador.cordenadas.X--; break;
+		case IZQUIERDA: (jugador.cordenadas.X > 0 ) ? jugador.cordenadas.X-- : jugador.cordenadas.X++; break;
+		default: return false;
 		}
-		if (t == ABAJO) {
-			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
 
-			coord_y_jugador++;
-			return true;
-		}
-		if (t == DERECHA) {
-			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
 
-			coord_x_jugador++;
-			return true;
-		}
-		if (t == IZQUIERDA) {
-			Dibujar_Mapa01(mapa, filas_jugador, columnas_jugador, coord_x_jugador, coord_y_jugador);
-
-			coord_x_jugador--;
-			return true;
-		}
+		return true;
 
 	}
 	return false;
@@ -406,45 +537,25 @@ void cambiarPoder(string poder, bool activar) {
 		}
 	}
 }
-void creditos() {
-	Console::SetCursorPosition(30, 2);
-	cout << "CREDITOS";
-	Console::SetCursorPosition(2, 4);
-	cout << "AUTORES/PROGRAMADORES/DISEÑADORES";
-	Console::SetCursorPosition(2, 6);
-	cout << "- Jeremi Porras";
-	Console::SetCursorPosition(2, 8);
-	cout << "- Alessio Ccasani";
-	Console::SetCursorPosition(2, 10);
-	cout << "- Emerson Nolasco";
-	Console::SetCursorPosition(2, 13);
-	cout << "UNIDOS POR EL CAMBIO";
-	Console::SetCursorPosition(2, 16);
-	cout << "La tala de árboles destruye hogares naturales, altera el clima y pone en riesgo nuestro futuro ";
-	
-}
 
-
-
-bool Hay_colision(int obj01_x, int obj01_y,int heith_barra_de_colicion , int obj02_x, int obj02_y) {
-	for (int i = obj01_y; i <= obj01_y + heith_barra_de_colicion; i++) {
-		if (obj01_x == obj02_x && i == obj02_y) {
-			return true;
-		}
-	}
-	return false;
+bool Hay_colision( int obj01_x, int obj01_y, int obj01_ancho, int obj01_alto, int obj02_x, int obj02_y, int obj02_ancho, int obj02_alto) {
+	return (
+		obj01_x < obj02_x + obj02_ancho &&
+		obj01_x + obj01_ancho > obj02_x &&
+		obj01_y < obj02_y + obj02_alto &&
+		obj01_y + obj01_alto > obj02_y
+		);
 }
 
 // cambiar el valor de las vidas y mostrar la actualizacion
 void vidas(int colision, int matriz[], int filas, int columnas) {
-	static int vidas = 3; // Empieza con 3 vidas
 
 	switch (colision) {
 	case 1: // Gana una vida
-		vidas++;
+		jugador.vidas++;
 		break;
 	case 2: // Pierde una vida
-		vidas--;
+		jugador.vidas--;
 		break;
 	}
 
@@ -460,5 +571,39 @@ void vidas(int colision, int matriz[], int filas, int columnas) {
 
 }
 
+void inicializarTroncos() {
+	srand(time(NULL));
+
+	for (int i = 0; i < MAX_TRONCOS; i++) {
+		troncos[i].cordenadas.X = 70; // posición horizontal aleatoria
+		troncos[i].cordenadas.Y = (i * 14) + 5;                // posicion vertical diferentes 
+		troncos[i].tiempo_de_aparicion = (1 + rand() % 3)*100; // velocidad aleatoria (1 o 2)
+		troncos[i].activo = true;
+	}
+}
+
+void DibujarTroncos(int* mapa, int* matriz_tronco) {
+	for (int i = 0; i < MAX_TRONCOS; i++) {
+		Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01, troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_filas, dimensiones_tronco_columnas);
+		DibujarTronco(matriz_tronco, dimensiones_tronco_filas, dimensiones_tronco_columnas, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
+
+	}
+
+}
+
+void moverTroncos() {
+
+
+	for (int i = 0; i < MAX_TRONCOS; i++) {
+		if (troncos[i].activo) {
+			troncos[i].cordenadas.X -= 3;
+			// si el tronco sale de la pantalla, lo reiniciamos
+			if (troncos[i].cordenadas.X < 1) {
+				troncos[i].tiempo_de_aparicion = (1 + rand() % 3) * 100;
+				troncos[i].cordenadas.X = 70;
+			}
+		}
+	}
+}
 
 #endif

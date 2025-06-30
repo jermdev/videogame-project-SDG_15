@@ -5,18 +5,57 @@
 // TODO: Iniciar la programcion incial del videojuego
 
 void Nivel01() {
-	Dibujar_Mapa01(mapa01, 50, 80);
+	Dibujar_Mapa01(mapa01, filas_mapa01, columnas_mapa01);
+	Dibujar_jugador(prota, 19, 10);
+	inicializarTroncos();
+
+	DibujarCastor(castor_data, 10, 10, 60, 20);
+	unsigned long long tiempo_anterior = GetTickCount64();
+	do {
+
+		if (_kbhit()) {//detecta si se presiona alguna tecla
+			Leer_movimiento(mapa01);
+			Dibujar_jugador(prota, filas_jugador, columnas_jugador);
+		}
+
+		DibujarCastor(castor_data, 10, 10, 60, 20);
+
+		unsigned long long tiempo_actual = GetTickCount64();
+		if (tiempo_actual - tiempo_anterior >= 100) {  // actualiza cada 100ms
+			//DibujarTroncos(mapa01, tronco_data);
+			//moverTroncos();
+
+			for (int i = 0; i < MAX_TRONCOS; i++) {
+
+
+				Limpiar_objeto(mapa01, filas_mapa01, columnas_mapa01,
+					troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_filas, dimensiones_tronco_columnas);
+
+				troncos[i].cordenadas.X -= 1;
+				if (troncos[i].cordenadas.X < 1) {
+					troncos[i].cordenadas.X = columnas_mapa01 - dimensiones_tronco_columnas; // vuelve a aparecer a la derecha
+				}
+				
+
+				DibujarTronco(tronco_data, dimensiones_tronco_filas, dimensiones_tronco_columnas, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
+				
+			}
+			tiempo_anterior = tiempo_actual;
+		}
+
+	} while (true);
+
 }
 
 int main() {
 
 	configurarConsola();
 
-	
+
 	Dibujar_Presentacion(presentacion_matris, 50, 80);//Llamar a la funcion dibujar presentacion
 	bool opcion_elegida = false;
 	int num_opcion;
-	inicio:
+inicio:
 	do
 	{
 		if (_kbhit()) {
@@ -32,14 +71,14 @@ int main() {
 
 	if (num_opcion == 0) {
 		system("cls");//Limpiamos pantalla
-		
+
 		Nivel01();
 
 	}
 
 	if (num_opcion == 1) {
 		system("cls");//Limpiamos pantalla
-		//dibujarinstrucciones();
+		dibujarfondoinstrucciones();
 		mostrarinstrucciones();
 
 		do
@@ -59,13 +98,13 @@ int main() {
 		creditos();
 
 		do {
-	        if(_kbhit()){
+			if (_kbhit()) {
 				opcion_elegida = false;
-				num_opcion=-1;
+				num_opcion = -1;
 				system("cls");
 				goto inicio;
 			}
-		
+
 		} while (true);
 	}
 
