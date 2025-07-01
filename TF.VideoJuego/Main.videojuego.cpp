@@ -20,28 +20,22 @@ void Nivel01() {
 
 		DibujarCastor(castor_data, 10, 10, 60, 20);
 
+
+
 		unsigned long long tiempo_actual = GetTickCount64();
+
 		if (tiempo_actual - tiempo_anterior >= 100) {  // actualiza cada 100ms
-			//DibujarTroncos(mapa01, tronco_data);
-			//moverTroncos();
-
 			for (int i = 0; i < MAX_TRONCOS; i++) {
+				if ( tiempo_actual <= troncos[i].tiempo_de_aparicion) continue;
 
-
-				Limpiar_objeto(mapa01, filas_mapa01, columnas_mapa01,
-					troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_filas, dimensiones_tronco_columnas);
-
-				troncos[i].cordenadas.X -= 1;
-				if (troncos[i].cordenadas.X < 1) {
-					troncos[i].cordenadas.X = columnas_mapa01 - dimensiones_tronco_columnas; // vuelve a aparecer a la derecha
-				}
-				
-
-				DibujarTronco(tronco_data, dimensiones_tronco_filas, dimensiones_tronco_columnas, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
-				
+				DibujarTroncos(mapa01, tronco_data, i);
+				//moverTroncos();
 			}
+			
+			
 			tiempo_anterior = tiempo_actual;
 		}
+
 
 	} while (true);
 

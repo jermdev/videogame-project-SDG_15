@@ -574,32 +574,47 @@ void vidas(int colision, int matriz[], int filas, int columnas) {
 void inicializarTroncos() {
 	srand(time(NULL));
 
+	int tiempo_base = GetTickCount();
+
+
 	for (int i = 0; i < MAX_TRONCOS; i++) {
 		troncos[i].cordenadas.X = 70; // posición horizontal aleatoria
-		troncos[i].cordenadas.Y = (i * 14) + 5;                // posicion vertical diferentes 
-		troncos[i].tiempo_de_aparicion = (1 + rand() % 3)*100; // velocidad aleatoria (1 o 2)
+		troncos[i].cordenadas.Y = (i * 14) + 5; // posicion vertical diferentes 
+		troncos[i].tiempo_de_aparicion = tiempo_base + (rand() % 5000);
 		troncos[i].activo = true;
 	}
 }
 
-void DibujarTroncos(int* mapa, int* matriz_tronco) {
-	for (int i = 0; i < MAX_TRONCOS; i++) {
-		Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01, troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_filas, dimensiones_tronco_columnas);
-		DibujarTronco(matriz_tronco, dimensiones_tronco_filas, dimensiones_tronco_columnas, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
 
+
+void DibujarTroncos(int* mapa, int* matriz_tronco, int i) {
+
+	int tiempo_base = GetTickCount();
+
+	Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01,
+		troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_filas, dimensiones_tronco_columnas);
+
+	if (troncos[i].cordenadas.X < 1) {
+		troncos[i].cordenadas.X = columnas_mapa01 - dimensiones_tronco_columnas; // vuelve a aparecer a la derecha
+		troncos[i].tiempo_de_aparicion = tiempo_base + (rand() % 5000);
+		return;
 	}
+	troncos[i].cordenadas.X -= 1;
+
+
+	DibujarTronco(matriz_tronco, dimensiones_tronco_filas, dimensiones_tronco_columnas, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
+
 
 }
 
 void moverTroncos() {
 
-
 	for (int i = 0; i < MAX_TRONCOS; i++) {
 		if (troncos[i].activo) {
-			troncos[i].cordenadas.X -= 3;
+			//troncos[i].cordenadas.X -= 3;
 			// si el tronco sale de la pantalla, lo reiniciamos
 			if (troncos[i].cordenadas.X < 1) {
-				troncos[i].tiempo_de_aparicion = (1 + rand() % 3) * 100;
+				troncos[i].tiempo_de_aparicion = (1 + (rand() % 3)) * 1000;
 				troncos[i].cordenadas.X = 70;
 			}
 		}
