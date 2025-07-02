@@ -20,7 +20,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="funcionesvideojuego_v1.h">
+    <ClInclude Include="funcionesvideojuego_v3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="assets.h">

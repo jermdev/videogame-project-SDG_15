@@ -1,5 +1,5 @@
 #include <iostream>
-#include "funcionesvideojuego_v1.h"
+#include "funcionesvideojuego_v3.h"
 #include "assets.h"
 
 // TODO: Iniciar la programcion incial del videojuego
@@ -36,6 +36,9 @@ void Nivel01() {
 			tiempo_anterior = tiempo_actual;
 		}
 
+		
+
+		
 
 	} while (true);
 

@@ -62,6 +62,9 @@ struct Tronco {
 struct Jugador {
 	int vidas = 3;
 	Cordenadas cordenadas = { coord_x_jugador, coord_y_jugador };
+	Cordenadas Hitbox = { coord_x_jugador + 1, coord_y_jugador + 16 };
+	int Hitbox_ancho = 8; // ancho de la hitbox del jugador
+	int Hitbox_alto = 3; // alto de la hitbox del jugador
 };
 
 const int MAX_TRONCOS = 3;
@@ -513,13 +516,16 @@ bool Leer_movimiento(int* mapa) {
 		Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01,jugador.cordenadas.X, jugador.cordenadas.Y, filas_jugador, columnas_jugador);
 
 		switch (t) {
-		case ARRIBA: (jugador.cordenadas.Y > 0) ? jugador.cordenadas.Y-- : jugador.cordenadas.Y++; break;
+		case ARRIBA: (jugador.cordenadas.Y > 0) ?
+			jugador.cordenadas.Y--:
+			jugador.cordenadas.Y++; break;
 		case ABAJO: (jugador.cordenadas.Y + filas_jugador < filas_mapa01) ? jugador.cordenadas.Y++ : jugador.cordenadas.Y--; break;
 		case DERECHA: (jugador.cordenadas.X + columnas_jugador < columnas_mapa01 ) ? jugador.cordenadas.X++ : jugador.cordenadas.X--; break;
 		case IZQUIERDA: (jugador.cordenadas.X > 0 ) ? jugador.cordenadas.X-- : jugador.cordenadas.X++; break;
 		default: return false;
 		}
-
+		jugador.Hitbox.X = jugador.cordenadas.X + 1; // actualizamos la hitbox del jugador
+		jugador.Hitbox.Y = jugador.cordenadas.Y + 16; // actualizamos la hitbox del jugador
 
 		return true;
 
@@ -548,23 +554,14 @@ bool Hay_colision( int obj01_x, int obj01_y, int obj01_ancho, int obj01_alto, in
 }
 
 // cambiar el valor de las vidas y mostrar la actualizacion
-void vidas(int colision, int matriz[], int filas, int columnas) {
-
-	switch (colision) {
-	case 1: // Gana una vida
-		jugador.vidas++;
-		break;
-	case 2: // Pierde una vida
-		jugador.vidas--;
-		break;
-	}
+void vidas( int matriz[], int filas, int columnas) {
 
 	// Mostrar el número de vidas actuales en pantalla
 	Console::SetCursorPosition(3, 2);
-	cout << "\033[0;97mVIDAS: " << vidas << "   \033[0m"; // texto blanco
+	cout << "\033[0;97mVIDAS: " << jugador.vidas << "   \033[0m"; // texto blanco
 
 
-	if (vidas <= 0) {  // si llega a 0 muestra la pantalla de perdiste
+	if (jugador.vidas <= 0) {  // si llega a 0 muestra la pantalla de perdiste
 		dibujarperdiste(matriz, filas, columnas);
 		mostrarperdiste();
 	}
@@ -579,7 +576,7 @@ void inicializarTroncos() {
 
 	for (int i = 0; i < MAX_TRONCOS; i++) {
 		troncos[i].cordenadas.X = 70; // posición horizontal aleatoria
-		troncos[i].cordenadas.Y = (i * 14) + 5; // posicion vertical diferentes 
+		troncos[i].cordenadas.Y = (i * 14) + 6; // posicion vertical diferentes 
 		troncos[i].tiempo_de_aparicion = tiempo_base + (rand() % 5000);
 		troncos[i].activo = true;
 	}
@@ -617,6 +614,19 @@ void moverTroncos() {
 				troncos[i].tiempo_de_aparicion = (1 + (rand() % 3)) * 1000;
 				troncos[i].cordenadas.X = 70;
 			}
+		}
+	}
+}
+
+void Colision_HitboxJugador_Tronco() {
+	for (int i = 0; i < MAX_TRONCOS; i++) {
+		if (troncos[i].activo && Hay_colision(jugador.Hitbox.X, jugador.Hitbox.Y, jugador.Hitbox_ancho, jugador.Hitbox_alto,
+			troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_columnas, dimensiones_tronco_filas)) {
+			// si hay colision con un tronco
+			//vidas(2, matriz_tronco, filas, columnas);
+			//troncos[i].activo = false;
+			system("pause");
+			return;
 		}
 	}
 }
