@@ -5,6 +5,8 @@
 #include <iostream>
 #include <windows.h>
 
+#define ENTER 13
+
 #define ARRIBA 72
 #define ABAJO 80
 #define IZQUIERDA 75
@@ -15,6 +17,9 @@ using namespace System;
 
 
 // variables iniciales
+
+
+const int niveles_del_juego = 2;
 
 //dimenciones tronco
 int dimensiones_tronco_filas = 12, dimensiones_tronco_columnas = 4;
@@ -39,7 +44,7 @@ int nivel_juego = 1;
 
 // dimensiones de los mapas
 int filas_mapa01 = 50, columnas_mapa01 = 80;
-int filas_mapa02 = 73, columnas_mapa02 = 100;
+int filas_mapa02 = 50, columnas_mapa02 = 80;
 
 // estructuras
 struct Poder {
@@ -61,21 +66,19 @@ struct Tronco {
 
 struct Jugador {
 	int vidas = 3;
+	int troncos_esquivados = 0;
+	int troncos_destruidos = 0;
 	Cordenadas cordenadas = { coord_x_jugador, coord_y_jugador };
 	Cordenadas Hitbox = { coord_x_jugador + 1, coord_y_jugador + 16 };
 	int Hitbox_ancho = 8; // ancho de la hitbox del jugador
 	int Hitbox_alto = 3; // alto de la hitbox del jugador
+	Poder poderes[2] = { {"romper tronco", false}, {"devolver tronco", false} };
 };
 
 const int MAX_TRONCOS = 3;
 Tronco troncos[MAX_TRONCOS];
 
 Jugador jugador;
-
-
-
-//arreglo de los poderes
-Poder arr_poderes[] = { {"romper tronco", false}, {"devolver tronco", false}};
 
 
 void gotoxi(int x, int y) {
@@ -137,17 +140,17 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 			case 5: cout << "\033[48;5;235m \033[0m"; break;
 			}
 		}
-	
+
 	}
 
-	//if (!incializado) _sleep(2000);
+	cout << "\033[48;5;102m\033[30m";
 	gotoxi(coord_escribir_X, coord_escribir_Y);
 	cout << "JUGAR";
 
-	gotoxi(coord_escribir_X, coord_escribir_Y+5);
+	gotoxi(coord_escribir_X, coord_escribir_Y + 5);
 	cout << "Instrucciones";
 
-	gotoxi(coord_escribir_X, coord_escribir_Y+10);
+	gotoxi(coord_escribir_X, coord_escribir_Y + 10);
 	cout << "Creditos";
 
 	char t = _getch();
@@ -164,7 +167,7 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 	}
 	gotoxi(coord_escribir_X - 6, coord_escribir_Y + position_flecha);
 	cout << "-->";
-	
+	cout << "\033[0m";
 }
 
 /*
@@ -178,30 +181,30 @@ los colores se dibujan en funcion de un valor entero en el arreglo.
 void Dibujar_Mapa01(int* matriz, int filas, int columnas) {// argumentos, un arreglo por referencia, numero filas, numero de colunas, obsional coords inciales
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			gotoxi(j , i );//Establecemos sus cordenadas segun su pocision 
+			gotoxi(j, i);//Establecemos sus cordenadas segun su pocision 
 
-			switch ( matriz[ (i * columnas)  + j] ) {
+			switch (matriz[(i * columnas) + j]) {
 			case 0: cout << "\033[48;5;52m \033[0m"; break;
 			case 1: cout << "\033[48;5;34m \033[0m"; break;
 			case 2: cout << "\033[48;5;180m \033[0m"; break;
 			}
 		}
-		
+
 	}
 }
-void Dibujar_mapa2(int* matriz, int filas, int columnas) {
+void Dibujar_mapa02(int* matriz, int filas, int columnas) {
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
 			gotoxi(j, i);//Establecemos sus cordenadas segun su pocision 
 
 			switch (matriz[i * columnas + j]) {
-			case 0: cout << "\033[48;5;52m \033[0m"; break;
-			case 1: cout << "\033[48;5;22m \033[0m"; break;
-			case 2: cout << "\033[48;5;196m \033[0m"; break;
-			case 3: cout << "\033[48;5;226m \033[0m"; break;
-			case 4: cout << "\033[48;5;94m \033[0m"; break;
-			case 5: cout << "\033[48;5;186m \033[0m"; break;
+			case 1: cout << "\033[48;5;52m \033[0m"; break;
+			case 2: cout << "\033[48;5;22m \033[0m"; break;
+			case 3: cout << "\033[48;5;196m \033[0m"; break;
+			case 4: cout << "\033[48;5;226m \033[0m"; break;
+			case 5: cout << "\033[48;5;94m \033[0m"; break;
+			case 6: cout << "\033[48;5;179m \033[0m"; break;
 			}
 		}
 		_sleep(100);
@@ -264,7 +267,7 @@ void Dibujar_maquina(int* matriz, int filas, int columnas) {
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {
 			gotoxi(j + coord_x_maquina, i + corrd_y_maquina);
-			switch (matriz[i* columnas + j]) {
+			switch (matriz[i * columnas + j]) {
 			case -1: break;
 			case 6: cout << "\033[48;5;16m \033[0m"; break;
 			case 7: cout << "\033[48;5;94m \033[0m"; break;
@@ -279,7 +282,7 @@ void Dibujar_maquina(int* matriz, int filas, int columnas) {
 }
 /*
 Colores para dibujar el arbol
- 
+
 (color del tronco) 7: marron oscuro -> #563416 -> en ANSI  \033[48;5;94m \033[0m
 (color del musgo) 13: verde oliva oscuro -> #4a5f41 -> en ANSI \033[48;5;58m \033[0m
 
@@ -318,7 +321,7 @@ void DibujarCastor(int* matriz, int filas, int columnas, int coord_x_castor, int
 			case 4: cout << "\033[48;5;231m \033[0m"; break;
 			case 6: cout << "\033[48;5;16m \033[0m"; break;
 			case 13: cout << "\033[48;5;136m \033[0m"; break;
-			case 14: cout << "\033[48;5;136m \033[0m"; break; 
+			case 14: cout << "\033[48;5;136m \033[0m"; break;
 			case 15: cout << "\033[48;5;95m \033[0m"; break;
 			}
 		}
@@ -374,6 +377,7 @@ void mostrarganaste() {
 
 // mostrar instrucciones 
 void mostrarinstrucciones() {
+	cout << "\033[48;5;34m\033[30m";
 	gotoxi(30, 2);
 	cout << "INSTRUCCIONES";
 	gotoxi(2, 4);
@@ -408,6 +412,7 @@ void mostrarinstrucciones() {
 	cout << "11. En el segundo nivel por cada 5 troncos que esquive el jugador este";
 	gotoxi(6, 29);
 	cout << "obtendra un poder el cual revierte la direccion de los troncos";
+	cout << "\033[0m";
 }
 
 // dibujar instrucciones
@@ -441,6 +446,7 @@ void dibujarfondoinstrucciones() {
 	}
 }
 void creditos() {
+	cout << "\033[48;5;180m \033[30m";
 	gotoxi(30, 2);
 	cout << "CREDITOS";
 	gotoxi(2, 4);
@@ -457,7 +463,7 @@ void creditos() {
 	cout << "La tala de árboles destruye hogares naturales,";
 	gotoxi(5, 17);
 	cout << "altera el clima y pone en riesgo nuestro futuro.";
-
+	cout << "\033[0m";
 }
 
 void dibujarfondocreditos() {
@@ -483,8 +489,8 @@ void dibujarfondocreditos() {
 		for (int j = 0; j < COLUMNAS; j++) {
 			Console::SetCursorPosition(j, i);
 			switch (matrizfondo[i * COLUMNAS + j]) {
-			case 0: cout << "\033[48;5;94m \033[0m"; break;
-			case 1: cout << "\033[48;5;58m \033[0m"; break;
+			case 0: cout << "\033[48;5;34m \033[0m"; break;
+			case 1: cout << "\033[48;5;180m \033[0m"; break;
 			}
 		}
 	}
@@ -495,11 +501,25 @@ void Limpiar_objeto(int* mapa, int filas, int columnas, int x, int y, int filas_
 		for (int j = 0; j < columnas_jugador; j++) {
 			gotoxi(x + j, y + i);
 			int valor_fondo = mapa[(y + i) * columnas + (x + j)];
-			switch (valor_fondo) {
-			case 0: cout << "\033[48;5;52m \033[0m"; break;
-			case 1: cout << "\033[48;5;34m \033[0m"; break;
-			case 2: cout << "\033[48;5;180m \033[0m"; break;
-				
+			if (nivel_juego == 1) {
+				switch (valor_fondo) {
+				case 0: cout << "\033[48;5;52m \033[0m"; break;
+				case 1: cout << "\033[48;5;34m \033[0m"; break;
+				case 2: cout << "\033[48;5;180m \033[0m"; break;
+				}
+
+			} else if(nivel_juego == 2) {
+				switch (valor_fondo) {
+				case 1: cout << "\033[48;5;52m \033[0m"; break;
+				case 2: cout << "\033[48;5;22m \033[0m"; break;
+				case 3: cout << "\033[48;5;196m \033[0m"; break;
+				case 4: cout << "\033[48;5;226m \033[0m"; break;
+				case 5: cout << "\033[48;5;94m \033[0m"; break;
+				case 6: cout << "\033[48;5;179m \033[0m"; break;
+				}
+			}
+			else {
+				cout << " "; // si no es ninguno de los dos niveles, limpiamos con un espacio en blanco
 			}
 		}
 	}
@@ -513,15 +533,15 @@ bool Leer_movimiento(int* mapa) {
 		char t = _getch();
 
 		//RestaurarFondoDebajoJugador(filas_jugador, columnas_jugador);
-		Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01,jugador.cordenadas.X, jugador.cordenadas.Y, filas_jugador, columnas_jugador);
+		Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01, jugador.cordenadas.X, jugador.cordenadas.Y, filas_jugador, columnas_jugador);
 
 		switch (t) {
 		case ARRIBA: (jugador.cordenadas.Y > 0) ?
-			jugador.cordenadas.Y--:
+			jugador.cordenadas.Y-- :
 			jugador.cordenadas.Y++; break;
-		case ABAJO: (jugador.cordenadas.Y + filas_jugador < filas_mapa01) ? jugador.cordenadas.Y++ : jugador.cordenadas.Y--; break;
-		case DERECHA: (jugador.cordenadas.X + columnas_jugador < columnas_mapa01 ) ? jugador.cordenadas.X++ : jugador.cordenadas.X--; break;
-		case IZQUIERDA: (jugador.cordenadas.X > 0 ) ? jugador.cordenadas.X-- : jugador.cordenadas.X++; break;
+		case ABAJO: (jugador.cordenadas.Y + filas_jugador < filas_mapa01 - 2) ? jugador.cordenadas.Y++ : jugador.cordenadas.Y--; break;
+		case DERECHA: (jugador.cordenadas.X + columnas_jugador < columnas_mapa01) ? jugador.cordenadas.X++ : jugador.cordenadas.X--; break;
+		case IZQUIERDA: (jugador.cordenadas.X > 0) ? jugador.cordenadas.X-- : jugador.cordenadas.X++; break;
 		default: return false;
 		}
 		jugador.Hitbox.X = jugador.cordenadas.X + 1; // actualizamos la hitbox del jugador
@@ -534,17 +554,16 @@ bool Leer_movimiento(int* mapa) {
 }
 
 
+//void cambiarPoder(string poder, bool activar) {
+//	int total = sizeof(arr_poderes) / sizeof(arr_poderes[0]);
+//	for (int i = 0; i < total; i++) {
+//		if (arr_poderes[i].nombre == poder) {
+//			arr_poderes[i].avilitado = activar;
+//		}
+//	}
+//}
 
-void cambiarPoder(string poder, bool activar) {
-	int total = sizeof(arr_poderes) / sizeof(arr_poderes[0]);
-	for (int i = 0; i < total; i++) {
-		if (arr_poderes[i].nombre == poder) {
-			arr_poderes[i].avilitado = activar;
-		}
-	}
-}
-
-bool Hay_colision( int obj01_x, int obj01_y, int obj01_ancho, int obj01_alto, int obj02_x, int obj02_y, int obj02_ancho, int obj02_alto) {
+bool Hay_colision(int obj01_x, int obj01_y, int obj01_ancho, int obj01_alto, int obj02_x, int obj02_y, int obj02_ancho, int obj02_alto) {
 	return (
 		obj01_x < obj02_x + obj02_ancho &&
 		obj01_x + obj01_ancho > obj02_x &&
@@ -554,18 +573,23 @@ bool Hay_colision( int obj01_x, int obj01_y, int obj01_ancho, int obj01_alto, in
 }
 
 // cambiar el valor de las vidas y mostrar la actualizacion
-void vidas( int matriz[], int filas, int columnas) {
+void vidas() {
 
 	// Mostrar el número de vidas actuales en pantalla
-	Console::SetCursorPosition(3, 2);
+	gotoxi(3, 49);
 	cout << "\033[0;97mVIDAS: " << jugador.vidas << "   \033[0m"; // texto blanco
 
 
-	if (jugador.vidas <= 0) {  // si llega a 0 muestra la pantalla de perdiste
-		dibujarperdiste(matriz, filas, columnas);
-		mostrarperdiste();
-	}
+	//if (jugador.vidas <= 0) {  // si llega a 0 muestra la pantalla de perdiste
+	//	dibujarperdiste(matriz, filas, columnas);
+	//	mostrarperdiste();
+	//}
 
+}
+void troncos_esquivados() {
+	gotoxi(20, 49);
+
+	cout << "Troncos esquivados: " << jugador.troncos_esquivados << "\033[0m";
 }
 
 void inicializarTroncos() {
@@ -594,13 +618,21 @@ void DibujarTroncos(int* mapa, int* matriz_tronco, int i) {
 	if (troncos[i].cordenadas.X < 1) {
 		troncos[i].cordenadas.X = columnas_mapa01 - dimensiones_tronco_columnas; // vuelve a aparecer a la derecha
 		troncos[i].tiempo_de_aparicion = tiempo_base + (rand() % 5000);
+		jugador.troncos_esquivados++; // incrementa el contador de troncos esquivados
 		return;
 	}
 	troncos[i].cordenadas.X -= 1;
 
 
 	DibujarTronco(matriz_tronco, dimensiones_tronco_filas, dimensiones_tronco_columnas, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
+	
 
+}
+
+void Borrar_troncos(int* mapa, int* matriz_tronco,int i) {
+
+	Limpiar_objeto(mapa, filas_mapa01, columnas_mapa01,
+		troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_filas, dimensiones_tronco_columnas);
 
 }
 
@@ -618,17 +650,68 @@ void moverTroncos() {
 	}
 }
 
-void Colision_HitboxJugador_Tronco() {
+void Colision_HitboxJugador_Tronco(int* mapa) {
 	for (int i = 0; i < MAX_TRONCOS; i++) {
 		if (troncos[i].activo && Hay_colision(jugador.Hitbox.X, jugador.Hitbox.Y, jugador.Hitbox_ancho, jugador.Hitbox_alto,
 			troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_columnas, dimensiones_tronco_filas)) {
 			// si hay colision con un tronco
-			//vidas(2, matriz_tronco, filas, columnas);
-			//troncos[i].activo = false;
-			system("pause");
+			jugador.vidas -= 1;
+			inicializarTroncos(); // reiniciamos los troncos
+			jugador.cordenadas.X = coord_x_jugador; // reiniciamos la posicion del jugador
+			jugador.cordenadas.Y = coord_y_jugador; // reiniciamos la posicion del jugador
+			system("cls"); // limpiamos la pantalla
+
+			if (nivel_juego == 1) {
+				// si el jugador pierde una vida en el nivel 1, reiniciamos el mapa
+				Dibujar_Mapa01(mapa, filas_mapa01, columnas_mapa01); // dibujamos el mapa
+			}
+			else if (nivel_juego == 2) {
+				// si el jugador pierde una vida en el nivel 2, reiniciamos el mapa
+				Dibujar_mapa02(mapa, filas_mapa02, columnas_mapa02); // dibujamos el mapa
+			}
+			vidas();
+
 			return;
 		}
 	}
+}
+
+void Habilitar_Poderes() {
+	// Habilitar el poder de romper troncos si se han esquivado 5 troncos
+	if (jugador.troncos_esquivados >= 5 && !jugador.poderes[0].avilitado) {
+		jugador.poderes[0].avilitado = true;
+		cout << "\033[0;32mPoder romper troncos activados!\033[0m" << endl;
+	}
+	// Habilitar el poder de revertir la trayectoria si se han esquivado 10 troncos
+	if (jugador.troncos_esquivados >= 10 && !jugador.poderes[1].avilitado) {
+		jugador.poderes[1].avilitado = true;
+		cout << "\033[0;32mPoder de revertir trayectoria habilitado!\033[0m" << endl; // texto verde
+	}
+}
+
+void Tronco_Destruido(int* arbol, int *mapa, int *matriz_tronco) {
+	for (int i = 0; i < MAX_TRONCOS; i++) {
+
+
+		if (!troncos[i].activo) {
+			DibujarArbol(arbol, 15, 10, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
+		}
+
+		if (troncos[i].activo && Hay_colision(jugador.Hitbox.X, jugador.Hitbox.Y, jugador.Hitbox_ancho, jugador.Hitbox_alto,
+			troncos[i].cordenadas.X, troncos[i].cordenadas.Y, dimensiones_tronco_columnas, dimensiones_tronco_filas)) {
+			// si hay colision con un tronco
+			if (jugador.poderes[0].avilitado) { // si el poder de romper tronco esta activado
+				troncos[i].activo = false; // desactivamos el tronco
+				jugador.troncos_esquivados++; // incrementamos el contador de troncos esquivados
+				Borrar_troncos(mapa, matriz_tronco, i); // borramos el tronco de la pantalla
+				// dibujamos el arbol en la posicion del tronco destruido
+				DibujarArbol(arbol, 15, 10, troncos[i].cordenadas.X, troncos[i].cordenadas.Y);
+				jugador.troncos_destruidos++;
+			}
+		}
+
+	}
+
 }
 
 #endif
