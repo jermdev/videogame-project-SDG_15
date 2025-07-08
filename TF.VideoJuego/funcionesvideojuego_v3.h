@@ -1,6 +1,7 @@
 #ifndef FUNCIONESVIDEOJUEGO_V1
 #define FUNCIONESVIDEOJUEGO_V1
 
+//definimos las librerias
 #include "conio.h"
 #include <iostream>
 #include <windows.h>
@@ -17,14 +18,13 @@ using namespace System;
 
 // variables iniciales
 
-
 const int niveles_del_juego = 2;
 
-//dimenciones tronco
+//dimensiones tronco
 int dimensiones_tronco_filas = 12, dimensiones_tronco_columnas = 4;
 
 
-// cordenadas iniciales del jugador
+// coordenadas iniciales del jugador
 const int coord_x_jugador = 20;
 const int coord_y_jugador = 27;
 
@@ -34,7 +34,7 @@ bool mapa_inicializado = false;
 int filas_jugador = 19;
 int columnas_jugador = 10;
 
-// dimewsiones de la maquina
+// dimensiones de la maquina
 int filas_maquina = 15;
 int columnas_maquina = 15;
 
@@ -46,7 +46,7 @@ int corrd_y_maquina = 25;
 // Nivel del juego
 int nivel_juego = 1;
 
-// dimensiones de los mapas
+// Dimensiones de los mapas
 int filas_mapa01 = 50, columnas_mapa01 = 80;
 int filas_mapa02 = 50, columnas_mapa02 = 80;
 
@@ -113,7 +113,7 @@ void gotoxi(int x, int y) {
 //}
 
 
-void configurarConsola() {
+void configurarConsola() {//se define el ancho y alto de la pantalla
 	int maxAncho = Console::LargestWindowWidth;
 	int maxAlto = Console::LargestWindowHeight;
 	Console::WriteLine("Máximo permitido: {0}x{1}", maxAncho, maxAlto);
@@ -136,9 +136,7 @@ los colores se dibujan en funcion del valor entero en el arreglo.
 (color del interior del trnco) 4: marron terracota calido -> #A9745B -> en ANSI \033[48;5;137m \033[0m
 (color de las letras del titulo) 5: gris azulado muy oscuro -> \033[48;5;235m \033[0m
 */
-int position_flecha = 0;
-
-
+int position_flecha = 0;//se inicializa el valor de la flecha en 0
 
 void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_iniciales = 0, int coords_y_iniciales = 0) {
 
@@ -148,9 +146,9 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 	Console::CursorVisible = false;
 	for (int i = 0; i < filas; i++) {
 		for (int j = 0; j < columnas; j++) {// barremos el arreglo en forma de una matriz
-			gotoxi(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus cordenadas segun su posicion 
+			gotoxi(j + coords_x_iniciales, i + coords_y_iniciales);//Establecemos sus coordenadas segun su posicion 
 
-			switch (matriz[(coords_y_iniciales + (i * columnas)) + (j + coords_x_iniciales)]) {
+			switch (matriz[(coords_y_iniciales + (i * columnas)) + (j + coords_x_iniciales)]) {//se definen los colores de la presentacion
 			case 0: cout << "\033[48;5;70m \033[0m"; break;
 			case 1: cout << "\033[48;5;102m \033[0m"; break;
 			case 2: cout << "\033[48;5;58m \033[0m"; break;
@@ -162,7 +160,7 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 
 	}
 
-	cout << "\033[48;5;102m\033[30m";
+	cout << "\033[48;5;102m\033[30m";//se aplico un cambio de fondo a las letras
 	gotoxi(coord_escribir_X, coord_escribir_Y);
 	cout << "JUGAR";
 
@@ -174,7 +172,7 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 
 	char t = _getch();
 
-	if (t == ARRIBA) {
+	if (t == ARRIBA) {//la direccion de las flechitas
 		position_flecha -= 5;
 	}
 	else if (t == ABAJO) {
