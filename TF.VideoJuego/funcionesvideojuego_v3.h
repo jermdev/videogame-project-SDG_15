@@ -5,7 +5,7 @@
 #include "conio.h"
 #include <iostream>
 #include <windows.h>
-
+//definimos valores predeterminados del indicador del movimiento
 #define ENTER 13
 #define ARRIBA 72
 #define ABAJO 80
@@ -15,7 +15,6 @@
 using namespace std;
 using namespace System;
 
-
 // variables iniciales
 
 const int niveles_del_juego = 2;
@@ -23,11 +22,9 @@ const int niveles_del_juego = 2;
 //dimensiones tronco
 int dimensiones_tronco_filas = 12, dimensiones_tronco_columnas = 4;
 
-
 // coordenadas iniciales del jugador
 const int coord_x_jugador = 20;
 const int coord_y_jugador = 27;
-
 
 bool mapa_inicializado = false;
 // dimensiones del jugador
@@ -37,7 +34,6 @@ int columnas_jugador = 10;
 // dimensiones de la maquina
 int filas_maquina = 15;
 int columnas_maquina = 15;
-
 
 //cordenadas iniciales de la maquina
 int coord_x_maquina = 60;
@@ -73,7 +69,7 @@ struct Maquina {
 	int Hitbox_ancho = 14; // ancho de la hitbox de la maquina
 	int Hitbox_alto = 15; // alto de la hitbox de la maquina
 	Cordenadas cordenadas = { coord_x_maquina, corrd_y_maquina };
-	Cordenadas Hitbox = { coord_x_maquina + 8, corrd_y_maquina };
+	Cordenadas Hitbox = {coord_x_maquina + 8, corrd_y_maquina };
 };
 
 struct Jugador {
@@ -121,10 +117,7 @@ void configurarConsola() {//se define el ancho y alto de la pantalla
 	Console::SetWindowSize(800, 800);  // columnas, filas
 }
 
-
-
 // Dibujos
-
 
 /*
 Colores para la la pantalla de presentacion
@@ -191,7 +184,7 @@ void Dibujar_Presentacion(int* matriz, int filas, int columnas, int coords_x_ini
 Colores para mapa01
 los colores se dibujan en funcion de un valor entero en el arreglo.
 (color del borde) 0: marron oscuro -> #4e342e -> Lo mas parecido en ANSI \033[48;5;52m \033[0m
-(colore del sesped) 1: verde brillante -> #21bf07 -> lo más parecido en ANSI \033[48;5;34m \033[0m
+(colore del cesped) 1: verde brillante -> #21bf07 -> lo más parecido en ANSI \033[48;5;34m \033[0m
 (color del camino) 2: arena claro -> #d2b48c -> lo más parecido en ANSI \033[48;5;180m \033[0m
 */
 
@@ -573,10 +566,12 @@ bool Leer_movimiento(int* mapa) {
 
 bool Hay_colision(int obj01_x, int obj01_y, int obj01_ancho, int obj01_alto, int obj02_x, int obj02_y, int obj02_ancho, int obj02_alto) {
 	return (
-		obj01_x < obj02_x + obj02_ancho &&
-		obj01_x + obj01_ancho > obj02_x &&
-		obj01_y < obj02_y + obj02_alto &&
-		obj01_y + obj01_alto > obj02_y
+		// Horizontal:
+		obj01_x < obj02_x + obj02_ancho &&//el borde izquierdo del objeto 1 está a la izquierda del borde derecho del objeto 2.
+		obj01_x + obj01_ancho > obj02_x && //el borde derecho del objeto 1 está a la derecha del borde izquierdo del objeto 2.
+		//Vertical:
+		obj01_y < obj02_y + obj02_alto &&//el borde superior del objeto 1 está por encima del borde inferior del objeto 2.
+		obj01_y + obj01_alto > obj02_y// el borde inferior del objeto 1 está por debajo del borde superior del objeto 2.
 		);
 }
 
@@ -702,6 +697,7 @@ void MoverMaquinaHaciaJugador() {
 	}
 
 }
+
 void Colision_HitboxJugador_Tronco(int* mapa) {
 	for (int i = 0; i < MAX_TRONCOS; i++) {
 		if (troncos[i].activo && Hay_colision(jugador.Hitbox.X, jugador.Hitbox.Y, jugador.Hitbox_ancho, jugador.Hitbox_alto,

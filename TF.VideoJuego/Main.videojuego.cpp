@@ -40,6 +40,7 @@ void Nivel01() {
 
 			tiempo_anterior = tiempo_actual;// reiniciamos el tiempo transcurrido 
 		}
+
 		if (jugador.troncos_esquivados >= 10) {
 			jugador.poderes[0].avilitado = true;
 			Tronco_Destruido(arbol_data, mapa01, tronco_data);
